@@ -1,0 +1,80 @@
+
+* Mailbox
+
+  We need to do communication between the kernel probes and handlers that stay on
+  the user side. Initially we planned to use /relay/ mechanism already present
+  in the Linux kernel but it uses locks internally and that breaks fairness of
+  our step counting.
+
+* Requirements
+  We would like to implement a mailbox protocol with a cheap send operation
+  performed in a fixed number of steps. This operation is going to be used from
+  the kernel side step-counted probes so we need to have bounds on its operation
+  time.
+
+* Limitations
+  We realize that general purpose wait-free structures are pretty complex and
+  does not perform very well. Therefore we restrict our mailbox in several ways.
+  First, we assume the same size of the message. Next, we assume that the memory
+  buffer to store the mailbox messages has fixed size enough to store =N=
+  messages where =N= is a power of two. Furthermore, we assume that it's
+  acceptable to drop the message if the buffer is (almost) full.
+
+  Next, we assume the maximum number of threads trying to concurrently push
+  messages into the mailbox to be smaller than 64.
+
+  Also, we don't require consumer of the mailbox be wait free and we assume that
+  the consumption always happens in a single thread.
+
+* Implementation
+  We implement the mailbox as a continuous memory buffer enough to store =N=
+  message plus some utility information for every message.
+
+  We use two 64 bit integers to represent the head and the tail of the queue.
+  Lower 6 bits of the head is used to lock the head during the enqueue
+  operation. This prevents the situation there head update happens concurrently
+  with several push operations. In this situation, if we don't lock the head it
+  might happen that different push operations see different head value and
+  therefore there is a chance that operation that comes first will fail, while
+  some of the next operations succeeds. In this case the successful operation
+  might end up with a wrong index in the buffer.
+
+  
+** Wait free enqueue
+   To push the event into the queue a kernel thread does the following:
+    1. reads and locks the head counter by adding 1 with FAA
+    2. reads and adds 64 to the tail counter with FAA, let old tail value be T
+    3. checks if the difference between the tail and the head is less than the
+       buffer size times 64
+    4. if the check fails, we are unable to push the event, so decrement the tail
+       counter atomically, unlock the head by decrementing it and drop the event
+    5. if the check succeeds, unlock the head. At this point, relevant bits of T
+       are the index of the sub-buffer reserved for the current message.
+    6. write the message into the sub-buffer. At the end, commit the message by
+       setting the sub-buffer status to =READY=.
+
+** Dequeue
+   To read enqueued messages from the mailbox, consumer process starts by
+   looking at the sub-buffer pointed by the relevant bits of the head. If the
+   sub-buffer status is =READY= the consumer copies the message data and sets
+   the status back to =WAITING=. Next, the consumer has to update the head to
+   give the sub-buffer back to the producers. This is done with a CAS operation
+   inside the loop: Let =H= be the head value we read before. We can guarantee
+   that the tail is not being updated if the head equals =H= with lower 6 bits
+   unset. In this case it's safe to update the head by adding 64.
+
+
+* V2: making dequeue wait free too
+  We can achieve wait free dequeue by adding an extra copy of the head index to
+  the structure. Dequeue now only works with this copy and the original head is
+  updated with the =CAS= operation by the enqueue function.
+
+  Indeed, if the current head has the lower (lock) bits equal to 1 then it's
+  only the current thread who possesses the current head index and it's safe to
+  update the head and unlock it in one go. Otherwise, if the =CAS= operation
+  fails we just decrement the lock counter as before.
+
+* Issues
+  1. The structure is not usable for high bandwidth: the head index is only
+     updated when no other thread tries to add to the queue. In case of high
+     bandwidth it might happen that the head will be always locked.
