@@ -31,7 +31,7 @@ int main()
 		printf("hwfq_enqueue failed with result %d\n", res);
 
 	while (! hwfq_try_dequeue(q, (char *)&val))
-		printf("Dequeued value: %lld\n", val);
+		printf("Dequeued value: %lu\n", val);
 
 	val = 30;
 	res = hwfq_enqueue(q, &val, sizeof(val));
@@ -47,7 +47,7 @@ int main()
 	if (res < 0)
 		printf("hwfq_try_dequeue failed with result %d\n", res);
 	else
-		printf("Dequeued value: %lld\n", val);
+		printf("Dequeued value: %lu\n", val);
 
 	val = 40;
 	res = hwfq_enqueue(q, &val, sizeof(val));
@@ -55,7 +55,7 @@ int main()
 		printf("hwfq_enqueue failed with result %d\n", res);
 
 	while (! hwfq_try_dequeue(q, (char *)&val))
-		printf("Dequeued value: %lld\n", val);
+		printf("Dequeued value: %lu\n", val);
 
 	return 0;
 }

@@ -38,7 +38,7 @@ uint64_t deque_all_check_from(struct hwfq *q, uint64_t n)
 
 	while (! hwfq_try_dequeue(q, (char *)&val)) {
 		if (val != n) {
-			printf("Expected %lld, got %lld, trying to resync\n", n, val);
+			printf("Expected %lu, got %lu, trying to resync\n", n, val);
 			n = val;
 		}
 		n++;
@@ -85,10 +85,10 @@ int main()
 		nanosleep(&n100, NULL);
 		if ((i & ((1 << 20) - 1)) == 0) {
 			printf("Stats:\n"
-				   "Enqueues tried:\t\t%016llx\n"
-				   "Enqueues succeeded:\t%016llx\n"
-				   "Drop count:\t\t%lld\n"
-				   "Max threads exceeded:\t%lld\n",
+				   "Enqueues tried:\t\t%016lx\n"
+				   "Enqueues succeeded:\t%016lx\n"
+				   "Drop count:\t\t%lu\n"
+				   "Max threads exceeded:\t%lu\n",
 				   64*i, cnt, q->dropped, q->sanity_check_failed);
 		}
 	}

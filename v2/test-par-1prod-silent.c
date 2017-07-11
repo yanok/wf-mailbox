@@ -77,10 +77,10 @@ int main()
 		nanosleep(&n100, NULL);
 		if ((i & ((1 << 20) - 1)) == 0) {
 			printf("Stats:\n"
-				   "Enqueues tried:\t\t%016llx\n"
-				   "Enqueues succeeded:\t%016llx\n"
-				   "Drop count:\t\t%lld\n"
-				   "Max threads exceeded:\t%lld\n",
+				   "Enqueues tried:\t\t%016lx\n"
+				   "Enqueues succeeded:\t%016lx\n"
+				   "Drop count:\t\t%lu\n"
+				   "Max threads exceeded:\t%lu\n",
 				   8*i, cnt, q->dropped, q->sanity_check_failed);
 		}
 	}

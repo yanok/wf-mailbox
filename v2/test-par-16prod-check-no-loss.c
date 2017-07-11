@@ -41,7 +41,7 @@ uint64_t deque_all_check_from(struct hwfq *q, uint64_t n)
 
 	while (! hwfq_try_dequeue(q, (char *)&val)) {
 		if (val != n) {
-			printf("Expected %lld, got %lld, trying to resync\n", n, val);
+			printf("Expected %lu, got %lu, trying to resync\n", n, val);
 			n = val;
 		}
 		n++;
@@ -91,8 +91,8 @@ void *consume_all(void *q_)
 		nanosleep(&n1, NULL);
 		if (cnt != oldcnt && (cnt & ((1 << 10) - 1)) == 0) {
 			printf("Stats:\n"
-				   "Dequeues :\t%llx\n"
-				   "Drop count:\t%lld\n",
+				   "Dequeues :\t%lx\n"
+				   "Drop count:\t%lu\n",
 				   cnt, q->dropped);
 		}
 		oldcnt = cnt;
@@ -148,13 +148,13 @@ int main()
 
 	/* printf("Unsorted output\n"); */
 	/* for (i = 0; i < 16 * 16; i++) */
-	/* 	printf("%3lld: %lld\n", i, out_buffer[i]); */
+	/* 	printf("%3lld: %lu\n", i, out_buffer[i]); */
 	printf("Sorting output\n");
 	qsort(out_buffer, 16 << 16, 8, cmp_int64);
 	printf("Checking the result\n");
 	for (i = 0; i < 16 << 16; i++) {
 		if (out_buffer[i] != i)
-			printf("Expected %lld, got %lld\n", i, out_buffer[i]);
+			printf("Expected %lu, got %lu\n", i, out_buffer[i]);
 	}
 
 	return 0;

@@ -38,7 +38,7 @@ uint64_t deque_all_check_from(struct hwfq *q, uint64_t n)
 
 	while (! hwfq_try_dequeue(q, (char *)&val)) {
 		if (val != n) {
-			printf("Expected %lld, got %lld, trying to resync\n", n, val);
+			printf("Expected %lu, got %lu, trying to resync\n", n, val);
 			n = val;
 		}
 		n++;
@@ -88,8 +88,8 @@ void *consume_all(void *q_)
 		nanosleep(&n1, NULL);
 		if (cnt != oldcnt && (cnt & ((1 << 16) - 1)) == 0) {
 			printf("Stats:\n"
-				   "Dequeues :\t%llx\n"
-				   "Drop count:\t%lld\n",
+				   "Dequeues :\t%lx\n"
+				   "Drop count:\t%lu\n",
 				   cnt, q->dropped);
 		}
 		oldcnt = cnt;

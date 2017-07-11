@@ -18,9 +18,9 @@ struct hwfq * hwfq_alloc
 	uint64_t el_size = (element_size + 7) & ~7ULL;
 	uint64_t sb_size = sizeof(struct hwfq_sub_buffer) + el_size;
 
-	debug("size: %llu, element_size: %llu, max_threads: %llu\n",
+	debug("size: %lu, element_size: %lu, max_threads: %lu\n",
 		  size, element_size, max_threads);
-	debug("lock_bits: %u, sz_bits %u, sb_size %llu, el_size: %llu\n",
+	debug("lock_bits: %u, sz_bits %u, sb_size %lu, el_size: %lu\n",
 		  lock_bits, sz_bits, sb_size, el_size);
 
 	/* lock bits should be less or equal to 32 */
@@ -49,11 +49,11 @@ struct hwfq * hwfq_alloc
 	q->index_shift = lock_bits;
 	q->lock_mask = (1 << q->index_shift) - 1;
 	q->index_mask = (sz - 1) << q->index_shift;
-	debug("max_threads = %llu\n", q->max_threads);
-	debug("size = %llu\n", q->size);
-	debug("lock_mask = %llx\n", q->lock_mask);
-	debug("index_shift = %lld\n", q->index_shift);
-	debug("index_mask = %llx\n", q->index_mask);
+	debug("max_threads = %lu\n", q->max_threads);
+	debug("size = %lu\n", q->size);
+	debug("lock_mask = %lx\n", q->lock_mask);
+	debug("index_shift = %lu\n", q->index_shift);
+	debug("index_mask = %lx\n", q->index_mask);
 
 	return q;
 }
@@ -76,7 +76,7 @@ struct hwfq_sub_buffer * hwfq_enqueque_start(struct hwfq *q)
 	/* sanity check: if lower head bits are all zeroes
 	   we have exceeded a maximum number of threads */
 	if ((h & q->lock_mask) == 0) {
-		debug("sanity check failed, h = %llu\n", h);
+		debug("sanity check failed, h = %lu\n", h);
 		__sync_fetch_and_add(&q->sanity_check_failed, 1);
 		__sync_fetch_and_add(&q->dropped, 1);
 		return NULL;
@@ -88,10 +88,10 @@ struct hwfq_sub_buffer * hwfq_enqueque_start(struct hwfq *q)
 	/* check if we still have space in the queue */
 	diff = (t - (h & ~(q->lock_mask)));
 
-	debug("h = %llu, t = %llu, diff = %llu\n", h, t, diff);
+	debug("h = %lu, t = %lu, diff = %lu\n", h, t, diff);
 
 	if (diff >= (q->size << q->index_shift)) {
-		debug("buffer full, size = %llu\n", q->size);
+		debug("buffer full, size = %lu\n", q->size);
 		/* decrement the tail back and unlock the head */
 		__sync_fetch_and_sub(&q->tail, q->max_threads);
 		__sync_fetch_and_sub(&q->head, 1);
@@ -105,7 +105,7 @@ struct hwfq_sub_buffer * hwfq_enqueque_start(struct hwfq *q)
 	/* now we claimed a sub-buffer at index t & index_mask */
 	index = (t & q->index_mask) >> q->index_shift;
 
-	debug("index = %lld\n", index);
+	debug("index = %lu\n", index);
 	return (void *)q->buffers + index * q->subbuffer_size;
 }
 
@@ -116,7 +116,7 @@ void hwfq_enqueue_commit(struct hwfq_sub_buffer *sb)
 	/* It is safe to use addition here because while the buffer belongs */
 	/* to us the flags are always zero */
 	flags = __sync_add_and_fetch(&sb->flags, HWFQ_SUB_BUFFER_READY);
-	debug("Flags @ %p: %llx\n", &sb->flags, flags);
+	debug("Flags @ %p: %lx\n", &sb->flags, flags);
 }
 
 int hwfq_enqueue(struct hwfq *q, void *data, uint64_t size)
@@ -153,8 +153,8 @@ int hwfq_try_dequeue(struct hwfq *q, char *buf)
 	struct hwfq_sub_buffer *sb = (void *)q->buffers + index * q->subbuffer_size;
 	uint64_t flags = __sync_fetch_and_and(&sb->flags, 0);
 
-	debug("head = %lld, index = %lld\n", h, index);
-	debug("flags @ %p = %llx\n", &sb->flags, flags);
+	debug("head = %lu, index = %lu\n", h, index);
+	debug("flags @ %p = %lx\n", &sb->flags, flags);
 	if (!(flags & HWFQ_SUB_BUFFER_READY))
 		return -1;
 

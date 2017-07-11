@@ -22,7 +22,7 @@ void deque_print_all(struct hwfq *q)
 	uint64_t val;
 
 	while (! hwfq_try_dequeue(q, (char *)&val)) {
-		printf("Dequeued value: %lld\n", val);
+		printf("Dequeued value: %lu\n", val);
 		i++;
 	}
 
