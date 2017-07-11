@@ -5,30 +5,55 @@
 #undef DEBUG
 #include "debug.h"
 
-struct hwfq * hwfq_alloc(int size, int element_size, int max_threads)
+struct hwfq * hwfq_alloc
+(uint64_t size, uint64_t element_size, uint64_t max_threads)
 {
-	/* TODO: do some checks */
-	/* size and max_threads should be powers of two */
-	/* and they have to fit into 64 bits leaving some */
-	/* extra space to handle overflows */
-	struct hwfq *q = malloc(sizeof(struct hwfq));
+	/* round up size to nearest power of 2 */
+	unsigned int sz_bits = 64 - __builtin_clzll(size - 1);
+	/* round up max_threads to nearest power of 2 minus 1 */
+	unsigned int lock_bits = 64 - __builtin_clzll(max_threads);
+	struct hwfq *q;
+	uint64_t sz = 1 << sz_bits;
+	/* align element size to 64 bit word */
+	uint64_t el_size = (element_size + 7) & ~7ULL;
+	uint64_t sb_size = sizeof(struct hwfq_sub_buffer) + el_size;
+
+	debug("size: %llu, element_size: %llu, max_threads: %llu\n",
+		  size, element_size, max_threads);
+	debug("lock_bits: %u, sz_bits %u, sb_size %llu, el_size: %llu\n",
+		  lock_bits, sz_bits, sb_size, el_size);
+
+	/* lock bits should be less or equal to 32 */
+	/* otherwise tail may theoretically wrap back to head */
+	if (lock_bits > 32) {
+		debug("lock_bits is too high: %u\n", lock_bits);
+		return NULL;
+	}
+
+	/* sz_bits + lock_bits should fit into 64 bit word */
+	if (lock_bits + sz_bits > 64) {
+		debug("Can't fit both lock_bits=%u and sz_bits=%u into a word\n",
+			  lock_bits, sz_bits);
+		return NULL;
+	}
+
+	q = malloc(sizeof(struct hwfq) + sb_size * sz);
 	if (q == NULL)
 		return NULL;
+	memset(q, 0, sizeof(struct hwfq) + sb_size * sz);
 
-	q->head = q->tail = q->dropped = 0;
-	q->max_threads = max_threads;
-	q->size = size;
-	q->element_size = element_size + 8;
-	q->index_shift = 63 - __builtin_clzll(max_threads);
+	q->max_threads = 1 << lock_bits;
+	q->size = sz;
+	q->element_size = element_size;
+	q->subbuffer_size = sb_size;
+	q->index_shift = lock_bits;
 	q->lock_mask = (1 << q->index_shift) - 1;
-	q->index_mask = (size - 1) << q->index_shift;
-	q->buffer = malloc(size * q->element_size);
-	q->sanity_check_failed = 0;
+	q->index_mask = (sz - 1) << q->index_shift;
+	debug("max_threads = %llu\n", q->max_threads);
 	debug("size = %llu\n", q->size);
 	debug("lock_mask = %llx\n", q->lock_mask);
 	debug("index_shift = %lld\n", q->index_shift);
 	debug("index_mask = %llx\n", q->index_mask);
-	memset(q->buffer, size * q->element_size, 0);
 
 	return q;
 }
@@ -76,7 +101,7 @@ struct hwfq_sub_buffer * hwfq_enqueque_start(struct hwfq *q)
 	index = (t & q->index_mask) >> q->index_shift;
 
 	debug("index = %lld\n", index);
-	return (struct hwfq_sub_buffer *)(q->buffer + q->element_size * index);
+	return (void *)q->buffers + index * q->subbuffer_size;
 }
 
 void hwfq_enqueue_commit(struct hwfq_sub_buffer *sb)
@@ -96,8 +121,8 @@ int hwfq_enqueue(struct hwfq *q, void *data, uint64_t size)
 	if (sb == NULL)
 		return -1;
 
-	if (size > q->element_size - 8) /* too big, truncating */
-		size = q->element_size - 8;
+	if (size > q->element_size) /* too big, truncating */
+		size = q->element_size;
 
 	memcpy(&sb->data, data, size);
 
@@ -120,7 +145,7 @@ int hwfq_try_dequeue(struct hwfq *q, char *buf)
 {
 	uint64_t h = q->head;
 	uint64_t index = (h & q->index_mask) >> q->index_shift;
-	struct hwfq_sub_buffer *sb = q->buffer + q->element_size * index;
+	struct hwfq_sub_buffer *sb = (void *)q->buffers + index * q->subbuffer_size;
 	uint64_t flags = __sync_fetch_and_and(&sb->flags, 0);
 
 	debug("head = %lld, index = %lld\n", h, index);
@@ -128,7 +153,7 @@ int hwfq_try_dequeue(struct hwfq *q, char *buf)
 	if (!(flags & HWFQ_SUB_BUFFER_READY))
 		return -1;
 
-	memcpy(buf, sb->data, q->element_size - 8);
+	memcpy(buf, sb->data, q->element_size);
 	hwfq_advance_head(q, 1);
 	return 0;
 }

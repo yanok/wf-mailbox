@@ -9,7 +9,7 @@ int main()
 	uint64_t val;
 	int res;
 
-	q = hwfq_alloc(16384, 8, 64);
+	q = hwfq_alloc(16384, 8, 63);
 	if (q == NULL) {
 		perror("malloc");
 		return 1;

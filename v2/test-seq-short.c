@@ -35,7 +35,7 @@ int main()
 	uint64_t vals[8] = {4,5,6,7,8,9,10,11};
 	int res;
 
-	q = hwfq_alloc(8, 8, 64);
+	q = hwfq_alloc(8, 8, 63);
 	if (q == NULL) {
 		perror("malloc");
 		return 1;

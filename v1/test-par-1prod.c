@@ -45,7 +45,7 @@ int main()
 	int res;
 	pthread_t consumer_thread;
 
-	q = hwfq_alloc(512, 8, 64);
+	q = hwfq_alloc(512, 8, 63);
 	if (q == NULL) {
 		perror("malloc");
 		return 1;

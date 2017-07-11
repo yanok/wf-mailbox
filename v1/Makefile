@@ -1,5 +1,6 @@
 
 TESTS = \
+	test-alloc \
 	test-seq \
 	test-seq-short \
 	test-par-1prod \
@@ -14,6 +15,8 @@ TESTS = \
 all : tests
 
 tests : ${TESTS}
+
+test-alloc : test-alloc.o hwfq.o
 
 test-seq : test-seq.o hwfq.o
 

@@ -13,13 +13,14 @@ struct hwfq {
 	volatile uint64_t head, tail, newhead;
 	uint64_t dropped;
 	uint64_t max_threads;
-	uint64_t size, element_size;
+	uint64_t size, element_size, subbuffer_size;
 	uint64_t lock_mask, index_mask, index_shift;
 	uint64_t sanity_check_failed;
-	void *buffer;
+	struct hwfq_sub_buffer buffers[0];
 };
 
-struct hwfq * hwfq_alloc(int size, int element_size, int max_threads);
+struct hwfq * hwfq_alloc
+(uint64_t size, uint64_t element_size, uint64_t max_threads);
 
 struct hwfq_sub_buffer * hwfq_enqueque_start(struct hwfq *q);
 

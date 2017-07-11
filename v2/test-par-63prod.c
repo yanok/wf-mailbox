@@ -106,7 +106,7 @@ int main()
 	struct produce_desc pdescs[63];
 	uint64_t i;
 
-	q = hwfq_alloc(1 << 16, 8, 64);
+	q = hwfq_alloc(1 << 16, 8, 63);
 	if (q == NULL) {
 		perror("malloc");
 		return 1;
