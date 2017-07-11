@@ -1,4 +1,6 @@
 
+LDLIBS= -lpthread
+
 TESTS = \
 	test-alloc \
 	test-seq \
