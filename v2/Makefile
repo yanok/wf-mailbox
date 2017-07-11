@@ -1,5 +1,7 @@
 
-LDLIBS= -lpthread
+CC = gcc
+CFLAGS = -m64 -O2
+LDLIBS = -lpthread
 
 TESTS = \
 	test-alloc \

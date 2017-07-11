@@ -1,4 +1,5 @@
 
+CFLAGS = -m64 -O2
 LDLIBS = -lpthread
 
 TESTS = \
