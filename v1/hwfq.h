@@ -22,6 +22,8 @@ struct hwfq {
 struct hwfq * hwfq_alloc
 (uint64_t size, uint64_t element_size, uint64_t max_threads);
 
+void hwfq_free(struct hwfq *q);
+
 struct hwfq_sub_buffer * hwfq_enqueque_start(struct hwfq *q);
 
 void hwfq_enqueue_commit(struct hwfq_sub_buffer *sb);

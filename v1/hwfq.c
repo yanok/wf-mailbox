@@ -58,6 +58,11 @@ struct hwfq * hwfq_alloc
 	return q;
 }
 
+void hwfq_free(struct hwfq *q)
+{
+	if (q) free(q);
+}
+
 struct hwfq_sub_buffer * hwfq_enqueque_start(struct hwfq *q)
 {
 	uint64_t h;

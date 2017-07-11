@@ -58,6 +58,11 @@ struct hwfq * hwfq_alloc
 	return q;
 }
 
+void hwfq_free(struct hwfq *q)
+{
+	if (q) free(q);
+}
+
 static inline void unlock_head(struct hwfq *q, uint64_t h)
 {
 	/* v2: if we are the only the only thread that possesses the head */
