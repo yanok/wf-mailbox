@@ -63,7 +63,7 @@ void hwfq_free(struct hwfq *q)
 	if (q) free(q);
 }
 
-struct hwfq_sub_buffer * hwfq_enqueque_start(struct hwfq *q)
+struct hwfq_sub_buffer * hwfq_enqueue_start(struct hwfq *q)
 {
 	uint64_t h;
 	uint64_t t;
@@ -121,7 +121,7 @@ void hwfq_enqueue_commit(struct hwfq_sub_buffer *sb)
 
 int hwfq_enqueue(struct hwfq *q, void *data, uint64_t size)
 {
-	struct hwfq_sub_buffer *sb = hwfq_enqueque_start(q);
+	struct hwfq_sub_buffer *sb = hwfq_enqueue_start(q);
 
 	if (sb == NULL)
 		return -1;

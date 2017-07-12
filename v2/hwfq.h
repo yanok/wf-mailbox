@@ -24,7 +24,7 @@ struct hwfq * hwfq_alloc
 
 void hwfq_free(struct hwfq *q);
 
-struct hwfq_sub_buffer * hwfq_enqueque_start(struct hwfq *q);
+struct hwfq_sub_buffer * hwfq_enqueue_start(struct hwfq *q);
 
 void hwfq_enqueue_commit(struct hwfq_sub_buffer *sb);
 
