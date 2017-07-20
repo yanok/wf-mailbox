@@ -18,8 +18,8 @@ struct hwfq * hwfq_alloc (uint64_t size, uint64_t element_size)
 	uint64_t el_size = (element_size + 7) & ~7ULL;
 	uint64_t sb_size = sizeof(struct hwfq_sub_buffer) + el_size;
 
-	debug("size: %lu, element_size: %lu, max_threads: %lu\n",
-		  size, element_size, max_threads);
+	debug("size: %lu, element_size: %lu\n",
+		  size, element_size);
 	debug("sz_bits %u, sb_size %lu, el_size: %lu\n",
 		  sz_bits, sb_size, el_size);
 
