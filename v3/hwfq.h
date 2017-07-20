@@ -12,9 +12,8 @@ struct hwfq_sub_buffer {
 };
 
 struct hwfq {
-	volatile uint64_t tail, cnt;
-	uint64_t head;
-	uint64_t dropped;
+	volatile uint64_t head, tail, cnt;
+	volatile uint64_t dropped;
 	uint64_t size, element_size, subbuffer_size;
 	uint64_t index_mask;
 	struct hwfq_sub_buffer buffers[0];
