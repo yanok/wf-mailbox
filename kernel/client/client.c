@@ -12,6 +12,7 @@ int main()
 	int fd;
 	struct hwfq *q;
 	uint64_t val;
+	struct stat stat;
 
     fd = open("/sys/kernel/debug/example/queue", O_RDWR);
 
@@ -20,8 +21,9 @@ int main()
 		return 1;
 	}
 
-	/* TODO: add some means of communicating the right size */
-	q = mmap(NULL, sizeof(struct hwfq) + 1024*16, PROT_READ | PROT_WRITE,
+	fstat(fd, &stat);
+
+	q = mmap(NULL, stat.st_size, PROT_READ | PROT_WRITE,
 			 MAP_SHARED, fd, 0);
 
 	if (q == MAP_FAILED) {
